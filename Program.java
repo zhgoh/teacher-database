@@ -1,7 +1,14 @@
 package guide;
 
 import java.lang.System;
-import java.util.Scanner;  
+import java.util.Scanner;
+import java.io.File;
+import java.io.FileReader;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+//TODO: Instead of making this a program for char guide, make this into a program that keep tracks of scores for example
 
 class Program {
     public static void main(String[] args) {
@@ -12,6 +19,7 @@ class Program {
     private Scanner scanner;
 
     public Program() {
+        //TODO: New, Open, Save, Add, Delete, List one, List many, See top students
         String[] choices = {
             "Open database from file.",
             "View characters in database.",
@@ -40,6 +48,7 @@ class Program {
 
         while (true) {
             // TODO: Create different modes
+            System.out.println();
             System.out.println("Welcome to our Java game guide database program for viewing game characters!!");
             System.out.println("You can select one of the options below.");
             System.out.println();
@@ -54,7 +63,6 @@ class Program {
             action[choice].run();
         }
     }
-
 
     int GetChoice(int maxChoice) {
         while (true) {
@@ -77,7 +85,17 @@ class Program {
     }
 
     void OpenFile() {
-        System.out.println("Load file");
+        System.out.println("Open file");
+        while (true) {
+            System.out.print("Input name of file to open (including .csv): ");
+            String input = scanner.nextLine();
+            try {
+                CSV csv = new CSV(input);
+                break;
+            } catch (IOException e) {
+                System.out.println("No file found, please try again.");
+            }
+        }
     }
 
     void ViewCharacters() {
@@ -85,8 +103,10 @@ class Program {
     }
 
     void CompareCharacters() {
+        //TODO: Compare multiple characters?
+        
         System.out.println("Compare characters");
-        // 2. Compare mode
+
         System.out.print("Input the name of the first character: ");
         String nameFirstChar = scanner.nextLine();
         // System.out.println(nameFirstChar);
@@ -100,18 +120,40 @@ class Program {
     }
 
     void ListCharacters() {
-        
+        System.out.println("List characters");
     }
 
     void AddCharacters() {
+        System.out.println("Add characters");
         
     }
 
     void DeleteCharacters() {
+        System.out.println("Delete characters");
         
     }
 
     void SaveFile() {
+        System.out.println("Save file");
         
     }
+}
+
+class CSV {
+    public CSV(String fileName) throws IOException {
+        FileReader fileReader = new FileReader(fileName, StandardCharsets.UTF_8);
+        try (BufferedReader br = new BufferedReader(fileReader)) {
+            var sb = new StringBuilder();
+
+            String line;
+            while ((line = br.readLine()) != null) {
+
+                sb.append(line);
+                sb.append(System.lineSeparator());
+            }
+
+            System.out.println(sb);
+        }
+    }
+    //TODO: Create helper methods
 }
