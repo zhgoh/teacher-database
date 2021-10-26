@@ -32,6 +32,7 @@ public class Program {
             "Add student to database.",
             "Delete student from database.",
             "View student info in database.",
+            "View all student info in database.",
             "View stats of students.",
             "Quit program."
         };
@@ -42,6 +43,7 @@ public class Program {
             () -> AddStudent(),
             () -> DeleteStudent(),
             () -> ViewStudent(),
+            () -> ViewAllStudent(),
             () -> ViewStats(),
             () -> ExitProgram()
         };
@@ -91,8 +93,7 @@ public class Program {
 
     void CreateDatabase() {
         System.out.println("Create database");
-        //TODO: Prompt for input
-        database.Create(0);
+        database.Create();
     }
 
     void LoadDatabase() {
@@ -157,24 +158,17 @@ public class Program {
     void ViewStudent() {
         System.out.println("View student");
         System.out.println();
-        database.Show();
+        database.Show("");
+    }
+
+    void ViewAllStudent() {
+        System.out.println("View all student");
+        System.out.println();
+        database.ShowAll();
     }
 
     void ViewStats() {
-        //TODO: Compare multiple students?
-
-        System.out.println("Compare characters");
-
-        System.out.print("Input the name of the first character: ");
-        String nameFirstChar = scanner.nextLine();
-        // System.out.println(nameFirstChar);
-
-        System.out.print("Input the name of the second character: ");
-        String nameSecondChar = scanner.nextLine();
-        // System.out.println(nameSecondChar);
-
-        // TODO: Implement the comparision strategy
-        System.out.println("Result: ");
+        // TODO: Show top scorer, how many students etc
     }
 
     void ExitProgram() {
@@ -185,19 +179,15 @@ public class Program {
 
 class Database {
     public String[] headers;
-    public List<String[]> data;
+    public List<Student> data;
 
     public Database() {
-        // headers = new String[] {};
-        // data = new ArrayList<String[]>();
-        Create(0);
+        Create();
     }
 
-    public void Create(int numHeaders) {
-        headers = new String[numHeaders];
-        data = new ArrayList<String[]>();
-        // headers = new String[]{ "Name", "English", "Math", "Science" };
-        // data = Arrays.asList(new String[][] {{"Jane", "10", "10", "20"}, {"May", "10", "20", "30"}});
+    public void Create() {
+        headers = new String[] {};
+        data = new ArrayList<Student>();
     }
 
     public void Save(String fileName) throws IOException {
@@ -212,13 +202,9 @@ class Database {
             fileWriter.write('\n');
 
             sep = '\0';
-            for (String[] row : data) {
-                for (String elem : row) {
-                    fileWriter.write(sep + elem);
-                    sep = ',';
-                }
+            for (Student student : data) {
+                fileWriter.write(student.toString());
                 fileWriter.write('\n');
-                sep = '\0';
             }
         } finally {
             fileWriter.flush();
@@ -238,7 +224,7 @@ class Database {
                     header = false;
                     headers = items;
                 } else {
-                    data.add(items);
+                    data.add(new Student(items));
                 }
             }
 
@@ -251,7 +237,10 @@ class Database {
     public void Remove(String entry) {
     }
 
-    public void Show() {
+    public void Show(String name) {
+    }
+
+    public void ShowAll() {
         char sep = '\0';
         for (String elem : headers) {
             System.out.print(sep + elem);
@@ -260,13 +249,8 @@ class Database {
         System.out.println();
 
         sep = '\0';
-        for (String[] row : data) {
-            for (String elem : row) {
-                System.out.print(sep + elem);
-                sep = ',';
-            }
-            System.out.println();
-            sep = '\0';
+        for (Student student : data) {
+            System.out.println(student);
         }
     }
 
@@ -276,5 +260,42 @@ class Database {
 
     public int GetNumDatas() {
         return data.size();
+    }
+}
+
+class Student {
+    private String name;
+    private int[] grades;
+
+    public Student(String[] data) {
+        if (data != null && data.length > 0) {
+            int[] grades = new int[data.length - 1];
+            try {
+                for (int i = 1; i < data.length; ++i) {
+                    grades[i - 1] = Integer.parseInt(data[i]);
+                    System.out.println(grades[i-1]);
+                }
+            } catch (NumberFormatException e) {
+            }
+            this.name = data[0];
+            this.grades = grades;
+        }
+    }
+
+    public Student(String name, int[] grades) {
+        this.name = name;
+        this.grades = grades;
+    }
+
+    @Override
+    public String toString() {
+        String result = name + ",";
+        String sep = "";
+        for (int elem : grades) {
+            result += (sep + elem);
+            sep = ",";
+        }
+        return result;
+
     }
 }
