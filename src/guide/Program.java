@@ -102,8 +102,13 @@ public class Program {
             System.out.print("Input number of subjects to create for this database: ");
             try {
                 String input = scanner.nextLine();
-
                 numSubjects = Integer.parseInt(input);
+
+                if (numSubjects <= 0) {
+                    System.out.println("Invalid number detected, input valid whole numbers.");
+                    continue;
+                }
+
                 break;
             } catch(InputMismatchException | NumberFormatException  e) {
                 System.out.println();
@@ -122,6 +127,10 @@ public class Program {
             try {
                 System.out.print("Input subject name: ");
                 subjects[i] = scanner.nextLine();
+                if (subjects[i].isBlank()) {
+                    System.out.println("Invalid subject name detected, input valid strings.");
+                    continue;
+                }
                 ++i;
             } catch(InputMismatchException | NumberFormatException e) {
                 System.out.println("Invalid subject name detected, input valid strings.");
@@ -148,14 +157,14 @@ public class Program {
             String input = scanner.nextLine();
             try {
                 System.out.println();
-                database.Load(input + ".csv");
-                System.out.println("Database loaded.");
-                break;
-            } catch (IOException e) {
                 if (input.equals("")) {
                     System.out.println("No filename detected, will quit loading database.");
                     break;
                 }
+                database.Load(input + ".csv");
+                System.out.println("Database loaded.");
+                break;
+            } catch (IOException e) {
                 System.out.println();
                 System.out.println("No file found, please try again.");
                 System.out.println();
@@ -165,6 +174,12 @@ public class Program {
     }
 
     void SaveDatabase() {
+        if (database.GetNumHeaders() <= 1) {
+            System.out.println("Error: There are no subjects in database. Please consider adding subjects before saving.");
+            PromptEnterKey();
+            return;
+        }
+
         System.out.println("Saving file ...");
         System.out.println();
 
@@ -177,14 +192,15 @@ public class Program {
             String input = scanner.nextLine();
             try {
                 System.out.println();
-                database.Save(input + ".csv");
-                System.out.println("Database saved.");
-                break;
-            } catch (IOException io) {
                 if (input.equals("")) {
                     System.out.println("No filename detected, will quit saving database.");
                     break;
                 }
+
+                database.Save(input + ".csv");
+                System.out.println("Database saved.");
+                break;
+            } catch (IOException io) {
                 System.out.println();
                 System.out.println("No file found, please try again.");
                 System.out.println();
@@ -194,7 +210,7 @@ public class Program {
     }
 
     void AddStudent() {
-        if (database.GetNumHeaders() == 0) {
+        if (database.GetNumHeaders() <= 1) {
             System.out.println("Error: There are no subjects in database. Please consider adding subjects before adding students.");
             PromptEnterKey();
             return;
@@ -225,11 +241,11 @@ public class Program {
                 try {
                     System.out.printf("%s: ", database.GetSubject(i));
                     String line = scanner.nextLine();
-                    int grade = Integer.parseInt(line);
-
-                    grades[i] = grade;
+                    grades[i] = Integer.parseInt(line);
                     ++i;
-                } catch(InputMismatchException | NumberFormatException e) {
+                } catch(ArrayIndexOutOfBoundsException |
+                        InputMismatchException |
+                        NumberFormatException e) {
                     System.out.println("Invalid number detected, input valid whole numbers.");
                 }
             }
@@ -242,9 +258,41 @@ public class Program {
     }
 
     void DeleteStudent() {
+        if (database.GetNumHeaders() <= 1) {
+            System.out.println("Error: There are no subjects in database. Please consider adding subjects before removing.");
+            PromptEnterKey();
+            return;
+        }
+
+        if (database.GetNumDatas() == 0) {
+            System.out.println("Error: There are no students in database. Please consider adding students before removing.");
+            PromptEnterKey();
+            return;
+        }
+
         System.out.println("Deleting student ...");
         System.out.println();
+        System.out.println("Input the name of student you wish to delete, leave student name blank to stop deleting.");
 
+        while (true) {
+            System.out.println();
+            database.ShowAll();
+            System.out.println();
+            System.out.print("Student name: ");
+            String name = scanner.nextLine();
+
+            if (name.equals("")) {
+                System.out.println();
+                System.out.println("No student name detected, will stop deleting students.");
+                break;
+            }
+
+            if (database.Remove(name)) {
+                System.out.printf("Deleted %s from database.\n", name);
+            } else {
+                System.out.printf("Could not find %s from database.\n", name);
+            }
+        }
         PromptEnterKey();
     }
 
@@ -268,6 +316,9 @@ public class Program {
         // TODO: Show top scorer, how many students etc
         System.out.println("Viewing all student stats ...");
         System.out.println();
+
+        System.out.printf("Number of Headers: %d.\n", database.GetNumHeaders());
+        System.out.printf("Number of Datas: %d.\n", database.GetNumDatas());
         PromptEnterKey();
     }
 
@@ -330,6 +381,9 @@ class Database {
             String line;
             boolean header = true;
             while ((line = br.readLine()) != null) {
+                if (line.isBlank()) {
+                    continue;
+                }
                 String[] items = line.split(",");
                 if (header) {
                     header = false;
@@ -346,7 +400,19 @@ class Database {
         data.add(student);
     }
 
-    public void Remove(Student student) {
+    public boolean Remove(String name) {
+        int i = 0;
+        boolean found = false;
+        for (Student student : data) {
+            if (student.GetName().equals(name)) {
+                found = true;
+                break;
+            }
+            ++i;
+        }
+
+        data.remove(i);
+        return found;
     }
 
     public void Show(String name) {
@@ -416,5 +482,9 @@ class Student {
         }
         return result;
 
+    }
+
+    public String GetName() {
+        return name;
     }
 }
