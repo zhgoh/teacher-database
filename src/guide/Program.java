@@ -51,7 +51,7 @@ public class Program {
         assert choices.length == action.length;
 
         while (true) {
-            // TODO: Create different modes
+            ClearScreen();
             System.out.println();
             System.out.println("Teacher's student database v0.1");
             int headers = database.GetNumHeaders();
@@ -93,87 +93,119 @@ public class Program {
 
     void CreateDatabase() {
         System.out.println("Create database");
+        System.out.println();
+
         database.Create();
+        PromptEnterKey();
     }
 
     void LoadDatabase() {
         System.out.println("Open file");
+        System.out.println();
+
         while (true) {
-            System.out.print("Input name of file to open (including .csv), to cancel type 0: ");
+            System.out.println("Input name of file to open, (excluding .csv), e.g. data, file");
+            System.out.println("To cancel, leave blank and press enter.");
+            System.out.print("Input: ");
+
             String input = scanner.nextLine();
+            input += ".csv";
             try {
+                System.out.println();
                 database.Load(input);
+                System.out.println("Database loaded.");
                 break;
             } catch (IOException e) {
-                try {
-                    int exit = Integer.parseInt(input);
-                    if (exit == 0) {
-                        System.out.println("Quit loading database.");
-                        break;
-                    }
-                } catch (NumberFormatException nfe) {
+                if (input.equals("")) {
+                    System.out.println("No filename detected, will quit loading database.");
+                    break;
                 }
                 System.out.println();
                 System.out.println("No file found, please try again.");
-                System.out.println("Type in 0 and press enter if you want to cancel and go back to main menu.");
                 System.out.println();
             }
         }
+        PromptEnterKey();
     }
 
     void SaveDatabase() {
         System.out.println("Save database");
+        System.out.println();
+
         while (true) {
-            System.out.print("Input name of file to save to, (including .csv), to cancel type 0: ");
+            System.out.println("Input name of file to save to, (excluding .csv), e.g. data, file");
+            System.out.println("To cancel, leave blank and press enter.");
+            System.out.print("Input: ");
+
             String input = scanner.nextLine();
+            input += ".csv";
             try {
+                System.out.println();
                 database.Save(input);
+                System.out.println("Database saved.");
                 break;
             } catch (IOException io) {
-                try {
-                    int exit = Integer.parseInt(input);
-                    if (exit == 0) {
-                        System.out.println("Quit loading database.");
-                        break;
-                    }
-                } catch (Exception e){
+                if (input.equals("")) {
+                    System.out.println("No filename detected, will quit saving database.");
+                    break;
                 }
                 System.out.println();
                 System.out.println("No file found, please try again.");
-                System.out.println("Type in 0 and press enter if you want to cancel and go back to main menu.");
                 System.out.println();
             }
         }
-
+        PromptEnterKey();
     }
 
     void AddStudent() {
         System.out.println("Add student");
+        System.out.println();
+
+        PromptEnterKey();
     }
 
     void DeleteStudent() {
         System.out.println("Delete student");
+        System.out.println();
+
+        PromptEnterKey();
     }
 
     void ViewStudent() {
         System.out.println("View student");
         System.out.println();
+
         database.Show("");
+        PromptEnterKey();
     }
 
     void ViewAllStudent() {
         System.out.println("View all student");
         System.out.println();
+
         database.ShowAll();
+        PromptEnterKey();
     }
 
     void ViewStats() {
         // TODO: Show top scorer, how many students etc
+        System.out.println();
+        PromptEnterKey();
     }
 
     void ExitProgram() {
         System.out.println("Exiting program...");
         System.exit(0);
+    }
+
+    void ClearScreen() {
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
+    }
+
+    void PromptEnterKey() {
+        System.out.print("Press \"ENTER\" to continue... ");
+        scanner.nextLine();
     }
 }
 
@@ -227,8 +259,8 @@ class Database {
                     data.add(new Student(items));
                 }
             }
-
         }
+        System.out.println("Successfully loaded from " + fileName);
     }
 
     public void Add(String entry) {
@@ -273,7 +305,6 @@ class Student {
             try {
                 for (int i = 1; i < data.length; ++i) {
                     grades[i - 1] = Integer.parseInt(data[i]);
-                    System.out.println(grades[i-1]);
                 }
             } catch (NumberFormatException e) {
             }
