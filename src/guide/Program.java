@@ -1,17 +1,19 @@
 package guide;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.System;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.InputMismatchException;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.util.Random;
 
 public class Program {
     public static void main(String[] args) {
@@ -32,9 +34,10 @@ public class Program {
             "Save database to file.",
             "Add student to database.",
             "Delete student from database.",
-            "View student info in database.",
+            "View one student info in database.",
             "View all student info in database.",
             "View stats of students.",
+            "Random generate database.",
             "Quit program."
         };
         Runnable[] action = {
@@ -43,9 +46,10 @@ public class Program {
             () -> SaveDatabase(),
             () -> AddStudent(),
             () -> DeleteStudent(),
-            () -> ViewStudent(),
+            () -> ViewOneStudent(),
             () -> ViewAllStudent(),
             () -> ViewStats(),
+            () -> GenerateRandom(),
             () -> ExitProgram()
         };
 
@@ -296,11 +300,36 @@ public class Program {
         PromptEnterKey();
     }
 
-    void ViewStudent() {
+    void ViewOneStudent() {
+        if (database.GetNumHeaders() <= 1) {
+            System.out.println("Error: There are no subjects in database. Please consider adding subjects before viewing.");
+            PromptEnterKey();
+            return;
+        }
+
+        if (database.GetNumDatas() == 0) {
+            System.out.println("Error: There are no students in database. Please consider adding students before viewing.");
+            PromptEnterKey();
+            return;
+        }
+
         System.out.println("Viewing student ...");
         System.out.println();
+        System.out.println("Input the name of student you wish to view, leave student name blank to stop viewing.");
 
-        database.Show("");
+        while (true) {
+            System.out.println();
+            System.out.print("Input: ");
+            String name = scanner.nextLine();
+
+            if (name.equals("")) {
+                System.out.println();
+                System.out.println("No student name detected, will stop viewing students.");
+                break;
+            }
+
+            database.Show(name);
+        }
         PromptEnterKey();
     }
 
@@ -313,12 +342,32 @@ public class Program {
     }
 
     void ViewStats() {
-        // TODO: Show top scorer, how many students etc
+        if (database.GetNumHeaders() <= 1) {
+            System.out.println("Error: There are no subjects in database. Please consider adding subjects before removing.");
+            PromptEnterKey();
+            return;
+        }
+
+        if (database.GetNumDatas() == 0) {
+            System.out.println("Error: There are no students in database. Please consider adding students before removing.");
+            PromptEnterKey();
+            return;
+        }
+
         System.out.println("Viewing all student stats ...");
         System.out.println();
 
-        System.out.printf("Number of Headers: %d.\n", database.GetNumHeaders());
-        System.out.printf("Number of Datas: %d.\n", database.GetNumDatas());
+        System.out.printf("Number of subjects: %d.\n", database.GetNumHeaders() - 1);
+        System.out.printf("Number of students: %d.\n", database.GetNumDatas());
+
+        Student top = database.GetTop();
+        System.out.printf("Top student: %s, total grades: %d.\n", top.GetName(), top.GetTotal());
+
+        Student bot = database.GetBottom();
+        System.out.printf("Bottom student: %s, total grades: %d.\n", bot.GetName(), bot.GetTotal());
+
+        System.out.printf("Total students who get more than 50: %d.\n", database.GetGradesMore(50));
+
         PromptEnterKey();
     }
 
@@ -336,6 +385,89 @@ public class Program {
         System.out.println();
         System.out.print("Press \"ENTER\" to continue... ");
         scanner.nextLine();
+    }
+
+    void GenerateRandom() {
+        System.out.println("Generating random database ...");
+        System.out.println();
+
+        int numSubjects = 0;
+        while (true) {
+            System.out.print("Input number of subjects to create for this database: ");
+            try {
+                String input = scanner.nextLine();
+                numSubjects = Integer.parseInt(input);
+
+                if (numSubjects <= 0) {
+                    System.out.println("Invalid number detected, input valid whole numbers.");
+                    continue;
+                }
+
+                break;
+            } catch(InputMismatchException | NumberFormatException  e) {
+                System.out.println();
+                System.out.println("Invalid number detected, input valid whole numbers.");
+                System.out.println();
+            }
+        }
+
+        int numStudents = 0;
+        while (true) {
+            System.out.print("Input number of students to create for this database: ");
+            try {
+                String input = scanner.nextLine();
+                numStudents = Integer.parseInt(input);
+
+                if (numStudents <= 0) {
+                    System.out.println("Invalid number detected, input valid whole numbers.");
+                    continue;
+                }
+                break;
+            } catch(InputMismatchException | NumberFormatException  e) {
+                System.out.println();
+                System.out.println("Invalid number detected, input valid whole numbers.");
+                System.out.println();
+            }
+        }
+
+        String[] subjects = GenerateRandomHeaders(numSubjects);
+        database.Create(subjects);
+
+        for (int i = 0; i < numStudents; ++i) {
+            Student student = new Student(GenerateRandomWord(), GenerateRandomGrades(numSubjects));
+            database.Add(student);
+        }
+        System.out.println("Randomly Created database.");
+
+        PromptEnterKey();
+    }
+
+    String[] GenerateRandomHeaders(int numberOfWords) {
+        String[] randomStrings = new String[numberOfWords + 1];
+        randomStrings[0] = "name";
+
+        for(int i = 1; i < numberOfWords + 1; i++) {
+            randomStrings[i] = GenerateRandomWord();
+        }
+        return randomStrings;
+    }
+
+    int[] GenerateRandomGrades(int numberOfWords) {
+        Random random = new Random();
+        int[] randomGrade = new int[numberOfWords];
+        for(int i = 0; i < numberOfWords; i++) {
+            randomGrade[i] = random.nextInt(100);
+        }
+        return randomGrade;
+    }
+
+    String GenerateRandomWord() {
+        Random random = new Random();
+        char[] word = new char[random.nextInt(5)+3]; // words of length 3 through 10. (1 and 2 letter words are boring.)
+        for(int j = 0; j < word.length; j++) {
+            word[j] = (char)('a' + random.nextInt(26));
+        }
+        return new String(word);
     }
 }
 
@@ -416,6 +548,24 @@ class Database {
     }
 
     public void Show(String name) {
+        for (String elem : headers) {
+            String[] items = elem.split(",");
+            for (String item : items) {
+                System.out.printf("%s\t", item);
+            }
+        }
+        System.out.println();
+
+        for (Student student : data) {
+            if (student.GetName().equals(name)) {
+                String[] items = student.toString().split(",");
+                for (String item : items) {
+                    System.out.printf("%s\t", item);
+                }
+                System.out.println();
+                break;
+            }
+        }
     }
 
     public void ShowAll() {
@@ -447,9 +597,32 @@ class Database {
     public String GetSubject(int i) {
         return headers[i + 1];
     }
+
+    //public Student[] GetAllDatas() {
+        //Student[] arr = new Student[data.size()];
+        //return data.toArray(arr);
+    //}
+
+    public Student GetTop() {
+        return Collections.max(data);
+    }
+
+    public Student GetBottom() {
+        return Collections.min(data);
+    }
+
+    public int GetGradesMore(int grades) {
+        int count = 0;
+        for (Student student : data) {
+            if (student.GetTotal() >= grades) {
+                ++count;
+            }
+        }
+        return count;
+    }
 }
 
-class Student {
+class Student implements Comparable<Student> {
     private String name;
     private int[] grades;
 
@@ -484,7 +657,19 @@ class Student {
 
     }
 
+    @Override
+    public int compareTo(Student s) {
+        if (s != null) {
+            return GetTotal() - s.GetTotal();
+        }
+        return 0;
+    }
+
     public String GetName() {
         return name;
+    }
+
+    public int GetTotal() {
+        return Arrays.stream(grades).sum();
     }
 }
