@@ -5,6 +5,7 @@ import java.util.Scanner;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -26,7 +27,7 @@ public class Program {
         database = new Database();
 
         String[] choices = {
-            "Create new database.",
+            "Create new database with new subjects.",
             "Load database from file.",
             "Save database to file.",
             "Add student to database.",
@@ -56,8 +57,9 @@ public class Program {
             System.out.println("Teacher's student database v0.1");
             int headers = database.GetNumHeaders();
             headers = headers == 0 ? 0 : headers - 1;
-            System.out.printf("Number of Subjects: %d, Number of data: %d\n", headers, database.GetNumDatas());
-            System.out.println("You can select one of the options below.");
+            System.out.printf("Number of Subjects: %d.\n", headers);
+            System.out.printf("Number of Students: %d.\n", database.GetNumDatas());
+            System.out.println("You can input one of the options below, e.g. 0.");
             System.out.println();
 
             // Print all the choices from choices array
@@ -73,7 +75,7 @@ public class Program {
 
     int GetChoice(int maxChoice) {
         while (true) {
-            System.out.print("Choice: ");
+            System.out.print("Input: ");
             String input = scanner.nextLine();
             try {
                 int choice = Integer.parseInt(input);
@@ -92,27 +94,61 @@ public class Program {
     }
 
     void CreateDatabase() {
-        System.out.println("Create database");
+        System.out.println("Creating database ...");
         System.out.println();
 
-        database.Create();
+        int numSubjects = 0;
+        while (true) {
+            System.out.print("Input number of subjects to create for this database: ");
+            try {
+                String input = scanner.nextLine();
+
+                numSubjects = Integer.parseInt(input);
+                break;
+            } catch(InputMismatchException | NumberFormatException  e) {
+                System.out.println();
+                System.out.println("Invalid number detected, input valid whole numbers.");
+                System.out.println();
+            }
+        }
+
+        // +1 to account for header name in csv
+        final int numHeaders = numSubjects + 1;
+        String[] subjects = new String[numHeaders];
+        subjects[0] = "name";
+        int i = 1;
+
+        while (i < numHeaders) {
+            try {
+                System.out.print("Input subject name: ");
+                subjects[i] = scanner.nextLine();
+                ++i;
+            } catch(InputMismatchException | NumberFormatException e) {
+                System.out.println("Invalid subject name detected, input valid strings.");
+            }
+        }
+
+        System.out.println();
+        database.Create(subjects);
+        System.out.println("Created database.");
+
         PromptEnterKey();
     }
 
     void LoadDatabase() {
-        System.out.println("Open file");
+        System.out.println("Opening file ...");
         System.out.println();
 
         while (true) {
             System.out.println("Input name of file to open, (excluding .csv), e.g. data, file");
             System.out.println("To cancel, leave blank and press enter.");
+            System.out.println();
             System.out.print("Input: ");
 
             String input = scanner.nextLine();
-            input += ".csv";
             try {
                 System.out.println();
-                database.Load(input);
+                database.Load(input + ".csv");
                 System.out.println("Database loaded.");
                 break;
             } catch (IOException e) {
@@ -129,19 +165,19 @@ public class Program {
     }
 
     void SaveDatabase() {
-        System.out.println("Save database");
+        System.out.println("Saving file ...");
         System.out.println();
 
         while (true) {
             System.out.println("Input name of file to save to, (excluding .csv), e.g. data, file");
             System.out.println("To cancel, leave blank and press enter.");
+            System.out.println();
             System.out.print("Input: ");
 
             String input = scanner.nextLine();
-            input += ".csv";
             try {
                 System.out.println();
-                database.Save(input);
+                database.Save(input + ".csv");
                 System.out.println("Database saved.");
                 break;
             } catch (IOException io) {
@@ -158,21 +194,62 @@ public class Program {
     }
 
     void AddStudent() {
-        System.out.println("Add student");
+        if (database.GetNumHeaders() == 0) {
+            System.out.println("Error: There are no subjects in database. Please consider adding subjects before adding students.");
+            PromptEnterKey();
+            return;
+        }
+
+        System.out.println("Adding student ...");
         System.out.println();
+
+        System.out.println("Input the name of the students followed by their grades.");
+        System.out.println("To stop adding students, leave the name of the student blank.");
+
+        while (true) {
+            System.out.println();
+            System.out.print("Student name: ");
+            String name = scanner.nextLine();
+
+            if (name.equals("")) {
+                System.out.println();
+                System.out.println("No student name detected, will stop adding students.");
+                break;
+            }
+
+            final int numSubjects = database.GetNumHeaders() - 1;
+            int[] grades = new int[numSubjects];
+            int i = 0;
+
+            while (i < numSubjects) {
+                try {
+                    System.out.printf("%s: ", database.GetSubject(i));
+                    String line = scanner.nextLine();
+                    int grade = Integer.parseInt(line);
+
+                    grades[i] = grade;
+                    ++i;
+                } catch(InputMismatchException | NumberFormatException e) {
+                    System.out.println("Invalid number detected, input valid whole numbers.");
+                }
+            }
+
+            Student student = new Student(name, grades);
+            database.Add(student);
+        }
 
         PromptEnterKey();
     }
 
     void DeleteStudent() {
-        System.out.println("Delete student");
+        System.out.println("Deleting student ...");
         System.out.println();
 
         PromptEnterKey();
     }
 
     void ViewStudent() {
-        System.out.println("View student");
+        System.out.println("Viewing student ...");
         System.out.println();
 
         database.Show("");
@@ -180,7 +257,7 @@ public class Program {
     }
 
     void ViewAllStudent() {
-        System.out.println("View all student");
+        System.out.println("Viewing all student ...");
         System.out.println();
 
         database.ShowAll();
@@ -189,6 +266,7 @@ public class Program {
 
     void ViewStats() {
         // TODO: Show top scorer, how many students etc
+        System.out.println("Viewing all student stats ...");
         System.out.println();
         PromptEnterKey();
     }
@@ -204,6 +282,7 @@ public class Program {
     }
 
     void PromptEnterKey() {
+        System.out.println();
         System.out.print("Press \"ENTER\" to continue... ");
         scanner.nextLine();
     }
@@ -214,11 +293,11 @@ class Database {
     public List<Student> data;
 
     public Database() {
-        Create();
+        Create(new String[]{});
     }
 
-    public void Create() {
-        headers = new String[] {};
+    public void Create(String[] subjects) {
+        headers = subjects;
         data = new ArrayList<Student>();
     }
 
@@ -263,10 +342,11 @@ class Database {
         System.out.println("Successfully loaded from " + fileName);
     }
 
-    public void Add(String entry) {
+    public void Add(Student student) {
+        data.add(student);
     }
 
-    public void Remove(String entry) {
+    public void Remove(Student student) {
     }
 
     public void Show(String name) {
@@ -292,6 +372,10 @@ class Database {
 
     public int GetNumDatas() {
         return data.size();
+    }
+
+    public String GetSubject(int i) {
+        return headers[i + 1];
     }
 }
 
