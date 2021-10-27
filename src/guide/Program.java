@@ -353,16 +353,20 @@ class Database {
     }
 
     public void ShowAll() {
-        char sep = '\0';
         for (String elem : headers) {
-            System.out.print(sep + elem);
-            sep = ',';
+            String[] items = elem.split(",");
+            for (String item : items) {
+                System.out.printf("%s\t", item);
+            }
         }
         System.out.println();
 
-        sep = '\0';
         for (Student student : data) {
-            System.out.println(student);
+            String[] items = student.toString().split(",");
+            for (String item : items) {
+                System.out.printf("%s\t", item);
+            }
+            System.out.println();
         }
     }
 
