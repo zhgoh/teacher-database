@@ -1,4 +1,4 @@
-package guide;
+package guide.cli;
 
 import java.io.BufferedReader;
 import java.io.File;
