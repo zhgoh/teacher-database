@@ -1,6 +1,8 @@
 # Student database program
 
-Simple java program (with database) to display student and subjects information.
+Simple java program (with database) to display student and subjects information. This project was built to teach Java to a student of mine.
+
+![alt text](Screenshots/Screenshots.PNG "Screenshots")
 
 ## Structure
 
